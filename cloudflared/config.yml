@@ -1,0 +1,7 @@
+tunnel: piscinaqr
+credentials-file: /etc/cloudflared/df12e567-fb81-449e-b3b4-da49f825c0b6.json
+
+ingress:
+  - hostname: piscinaqr.jeikaverso.com
+    service: http://frontend:3001
+  - service: http_status:404

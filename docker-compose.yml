@@ -1,0 +1,63 @@
+services:
+  db:
+    image: postgres:16-alpine
+    container_name: piscinaqr-db
+    restart: unless-stopped
+    environment:
+      POSTGRES_DB: piscinaqr
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres
+    ports:
+      - "5433:5432"
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+
+  backend:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+    container_name: piscinaqr-backend
+    restart: unless-stopped
+    ports:
+      - "8001:8001"
+    environment:
+      DATABASE_URL: postgresql+psycopg://postgres:postgres@db:5432/piscinaqr
+      SECRET_KEY: supersecretkeyquecambiarproduccion
+      FRONTEND_URL: http://frontend:3001
+      BACKEND_PORT: 8001
+    depends_on:
+      db:
+        condition: service_healthy
+    entrypoint: >
+      sh -c "cd /app && alembic upgrade head && python seed_data.py && uvicorn app.main:app --host 0.0.0.0 --port 8001"
+
+  frontend:
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile
+    container_name: piscinaqr-frontend
+    restart: unless-stopped
+    ports:
+      - "3001:3001"
+    environment:
+      NEXT_PUBLIC_API_URL: /api/v1
+    depends_on:
+      - backend
+
+  cloudflared:
+    image: cloudflare/cloudflared:latest
+    container_name: piscinaqr-tunnel
+    restart: unless-stopped
+    command: tunnel run --protocol http2
+    volumes:
+      - ./cloudflared:/etc/cloudflared
+    depends_on:
+      - frontend
+
+volumes:
+  pgdata:
