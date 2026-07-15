@@ -31,17 +31,57 @@ def _parse_ubic(ubicacion_raw: str | None) -> list[str]:
         return [str(ubicacion_raw)] if ubicacion_raw else []
 
 
-@router.get("/", response_model=list[AttendanceResponse])
+@router.get("/", response_model=list[AttendanceWithMember])
 def list_attendances(
     member_id: str = "",
+    fecha_inicio: str = "",
+    fecha_fin: str = "",
     skip: int = 0,
-    limit: int = 100,
+    limit: int = 500,
     db: Session = Depends(get_db),
     _=Depends(get_current_user),
 ):
+    query = db.query(
+        Attendance, Member.dni, Member.nombre, Member.apellidos,
+        Academy.nombre.label("academy_nombre"),
+    ).outerjoin(Member, Attendance.member_id == Member.id).outerjoin(Academy, Attendance.academy_id == Academy.id)
+
     if member_id:
-        return attendance_crud.get_by_member(db, member_id, skip, limit)
-    return attendance_crud.get_all(db, skip, limit)
+        query = query.filter(Attendance.member_id == member_id)
+
+    if fecha_inicio:
+        try:
+            fi = datetime.strptime(fecha_inicio, "%Y-%m-%d").date()
+            query = query.filter(func.date(Attendance.fecha) >= fi)
+        except ValueError:
+            pass
+
+    if fecha_fin:
+        try:
+            ff = datetime.strptime(fecha_fin, "%Y-%m-%d").date()
+            query = query.filter(func.date(Attendance.fecha) <= ff)
+        except ValueError:
+            pass
+
+    rows = query.order_by(Attendance.fecha.desc()).offset(skip).limit(limit).all()
+    result = []
+    for a in rows:
+        if a.Attendance.tipo == "academy":
+            nombre = a.academy_nombre or "Academia"
+            dni = a.academy_nombre or "-"
+        else:
+            nombre = f"{a.nombre or ''} {a.apellidos or ''}".strip()
+            dni = a.dni or "-"
+        result.append(AttendanceWithMember(
+            id=a.Attendance.id, member_id=a.Attendance.member_id,
+            academy_id=a.Attendance.academy_id, tipo=a.Attendance.tipo,
+            member_dni=dni, member_nombre=nombre, member_apellidos=a.apellidos,
+            fecha=a.Attendance.fecha, hora_entrada=a.Attendance.hora_entrada,
+            ubicacion=a.Attendance.ubicacion, observacion=a.Attendance.observacion,
+            registrado_por=a.Attendance.registrado_por,
+            created_at=a.Attendance.created_at,
+        ))
+    return result
 
 
 @router.get("/today", response_model=list[AttendanceWithMember])
@@ -117,6 +157,8 @@ def update_ubicaciones(
         )
     ubicaciones = body.get("ubicaciones", [])
     attendance.ubicacion = json.dumps(ubicaciones) if ubicaciones else None
+    if ubicaciones and attendance.liberado:
+        attendance.liberado = None
     db.commit()
     return {"ok": True, "ubicaciones": ubicaciones}
 

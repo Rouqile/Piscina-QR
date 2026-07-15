@@ -179,8 +179,6 @@ export default function CheckinPage() {
 
               {info.inactivo ? (
                 <div className="bg-gray-100 text-gray-500 text-center py-3 rounded-lg font-medium">Miembro inactivo</div>
-              ) : info.ya_entro ? (
-                <div className="bg-green-50 text-green-700 text-center py-3 rounded-lg font-medium">Entrada ya registrada hoy</div>
               ) : info.puede_entrar ? (
                 <div className="space-y-3">
                   <div>

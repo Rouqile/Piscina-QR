@@ -135,13 +135,12 @@ def today_attendees(
     _=Depends(get_current_user),
 ):
     today = datetime.now(timezone.utc).date()
-    now = datetime.now(timezone.utc)
-    hace_una_hora = now - timedelta(hours=1)
 
     rows = (
         db.query(
             Attendance.id, Attendance.member_id, Attendance.academy_id,
             Attendance.tipo, Attendance.hora_entrada, Attendance.ubicacion,
+            Attendance.liberado,
             Member.nombre.label("member_nombre"),
             Member.apellidos.label("member_apellidos"),
             Member.dni.label("member_dni"),
@@ -149,11 +148,7 @@ def today_attendees(
         )
         .outerjoin(Member, Attendance.member_id == Member.id)
         .outerjoin(Academy, Attendance.academy_id == Academy.id)
-        .filter(
-            func.date(Attendance.fecha) == today,
-            Attendance.hora_entrada >= hace_una_hora,
-            Attendance.liberado.is_(None),
-        )
+        .filter(func.date(Attendance.fecha) == today)
         .order_by(Attendance.hora_entrada.desc())
         .all()
     )

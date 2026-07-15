@@ -14,7 +14,7 @@ router = APIRouter(prefix="/members", tags=["members"])
 def list_members(
     query: str = "",
     skip: int = 0,
-    limit: int = 100,
+    limit: int = 5000,
     db: Session = Depends(get_db),
     _=Depends(get_current_user),
 ):

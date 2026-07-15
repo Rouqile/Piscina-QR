@@ -82,25 +82,6 @@ export default function DashboardPage() {
 
   useEffect(() => { fetchStats(); fetchCronograma(); fetchTodayAttendees(); }, [fetchStats, fetchCronograma, fetchTodayAttendees]);
 
-  const handleLiberar = async (attendanceId: string, nombre: string) => {
-    if (!confirm(`Liberar a "${nombre}" de esta ubicacion?`)) return;
-    try {
-      await api.post(`/dashboard/liberar/${attendanceId}`);
-      toast.success("Ubicacion liberada (historial conservado)");
-      setSelectedUb(null);
-      fetchStats();
-    } catch { toast.error("Error al liberar"); }
-  };
-
-  const handleCambiarUbicacion = async (attendanceId: string, nuevaUb: string) => {
-    try {
-      await api.put(`/attendances/${attendanceId}/ubicaciones`, { ubicaciones: [nuevaUb] });
-      toast.success("Ubicacion actualizada");
-      setSelectedUb(null);
-      fetchStats();
-    } catch { toast.error("Error al cambiar ubicacion"); }
-  };
-
   const handleDrop = async (ev: React.DragEvent, targetNombre: string) => {
     ev.preventDefault();
     if (!editMode) return;
@@ -142,17 +123,28 @@ export default function DashboardPage() {
     } catch { toast.error("Error al asignar"); }
   };
 
-  const handleQuitarDeUbicacion = async (attId: string, ubNombre: string) => {
+  const handleQuitarDeCarril = async (attId: string, ubNombre: string) => {
     try {
       const att = todayAttendees.find((a) => a.id === attId);
       const currentUbs = att?.ubicaciones || [];
       const newUbs = currentUbs.filter((u) => u !== ubNombre);
       await api.put(`/attendances/${attId}/ubicaciones`, { ubicaciones: newUbs });
-      toast.success("Quitado de " + ubNombre);
+      toast.success(`Quitado de ${ubNombre}`);
+      setSelectedUb(null);
       fetchStats();
       fetchTodayAttendees();
-      setSelectedUb(null);
     } catch { toast.error("Error"); }
+  };
+
+  const handleLiberar = async (attendanceId: string, nombre: string) => {
+    if (!confirm(`Liberar a "${nombre}" de todas las ubicaciones?`)) return;
+    try {
+      await api.post(`/dashboard/liberar/${attendanceId}`);
+      toast.success(`${nombre} liberado.`);
+      setSelectedUb(null);
+      fetchStats();
+      fetchTodayAttendees();
+    } catch { toast.error("Error al liberar"); }
   };
 
   const prevWeek = () => setSemanaInicio((d) => addDays(d, -7));
@@ -186,8 +178,16 @@ export default function DashboardPage() {
         <div className="flex items-center gap-3">
           <button onClick={() => { fetchStats(); fetchCronograma(); fetchTodayAttendees(); }}
             className="px-3 py-1.5 text-sm bg-gray-100 text-gray-600 rounded-lg hover:bg-gray-200">Actualizar</button>
+          <label className="flex items-center gap-2 text-sm cursor-pointer">
+            <span className="text-gray-500">Editar</span>
+            <button type="button" onClick={() => setEditMode(!editMode)}
+              className={"relative w-10 h-5 rounded-full transition-colors " + (editMode ? "bg-blue-600" : "bg-gray-300")}>
+              <span className={"absolute top-0.5 left-0.5 w-4 h-4 bg-white rounded-full transition-transform " + (editMode ? "translate-x-5" : "")} />
+            </button>
+          </label>
         </div>
       </div>
+      {editMode && <p className="text-xs text-blue-600 mb-3">Arrastre un miembro de una ubicacion a otra para moverlo.</p>}
 
       <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-4 mb-8">
         {cards.map((card) => (
@@ -205,15 +205,16 @@ export default function DashboardPage() {
             <div className="grid grid-cols-2 md:grid-cols-3 gap-3 auto-rows-auto">
               {carriles.map((c) => (
                 <div key={c.nombre}
-                  onDragOver={editMode ? (e) => e.preventDefault() : undefined}
+                  onDragOver={editMode ? (e) => { e.preventDefault(); } : undefined}
                   onDrop={(e) => handleDrop(e, c.nombre)}
-                  onClick={() => setSelectedUb(c)}
-                  className={"rounded-xl border-2 p-3 text-center transition-all min-h-[80px] cursor-pointer hover:shadow-md " + (c.ocupado ? "border-green-400 bg-green-50" : "border-gray-200 bg-gray-50")}
+                  onClick={() => { if (!editMode) setSelectedUb(c); }}
+                  className={"rounded-xl border-2 p-3 text-center transition-all min-h-[80px] " + (editMode ? "cursor-default" : "cursor-pointer hover:shadow-md") + " " + (c.ocupado ? "border-green-400 bg-green-50" : "border-gray-200 bg-gray-50")}
                   style={{ minHeight: cardHeight + "px" }}>
                   <div className="text-xs font-semibold text-gray-500 uppercase mb-1">{c.nombre}</div>
                   {c.miembros.length > 0 ? c.miembros.map((m) => (
-                    <div key={m.attendance_id}
-                      className="text-sm font-medium truncate px-2 py-1 rounded mt-1 text-green-700">
+                    <div key={m.attendance_id} draggable={editMode}
+                      onDragStart={(e) => { e.dataTransfer.setData("text/plain", JSON.stringify(m)); }}
+                      className={"text-sm font-medium truncate px-2 py-1 rounded mt-1 transition-colors " + (editMode ? "cursor-grab active:cursor-grabbing bg-green-100 hover:bg-green-200" : "text-green-700")}>
                       {m.nombre}
                     </div>
                   )) : <div className="text-xs text-gray-400 mt-4">Libre</div>}
@@ -229,13 +230,16 @@ export default function DashboardPage() {
             <div className="grid grid-cols-1 gap-3">
               {piscinas.map((p) => (
                 <div key={p.nombre}
-                  onClick={() => setSelectedUb(p)}
-                  className={"rounded-xl border-2 p-3 text-center transition-all min-h-[80px] cursor-pointer hover:shadow-md " + (p.ocupado ? "border-teal-400 bg-teal-50" : "border-gray-200 bg-gray-50")}
+                  onDragOver={editMode ? (e) => { e.preventDefault(); } : undefined}
+                  onDrop={(e) => handleDrop(e, p.nombre)}
+                  onClick={() => { if (!editMode) setSelectedUb(p); }}
+                  className={"rounded-xl border-2 p-3 text-center transition-all min-h-[80px] " + (editMode ? "cursor-default" : "cursor-pointer hover:shadow-md") + " " + (p.ocupado ? "border-teal-400 bg-teal-50" : "border-gray-200 bg-gray-50")}
                   style={{ minHeight: cardHeight + "px" }}>
                   <div className="text-xs font-semibold text-gray-500 uppercase mb-1">{p.nombre}</div>
                   {p.miembros.length > 0 ? p.miembros.map((m) => (
-                    <div key={m.attendance_id}
-                      className="text-sm font-medium truncate px-2 py-1 rounded mt-1 text-teal-700">
+                    <div key={m.attendance_id} draggable={editMode}
+                      onDragStart={(e) => { e.dataTransfer.setData("text/plain", JSON.stringify(m)); }}
+                      className={"text-sm font-medium truncate px-2 py-1 rounded mt-1 transition-colors " + (editMode ? "cursor-grab active:cursor-grabbing bg-teal-100 hover:bg-teal-200 mb-1" : "text-teal-700")}>
                       {m.nombre}
                     </div>
                   )) : <div className="text-xs text-gray-400 mt-4">Libre</div>}
@@ -272,12 +276,15 @@ export default function DashboardPage() {
                   {DIAS_LABELS.map((dia, di) => {
                     const items = slot[dia] || [];
                     return (
-                      <div key={`${si}-${di}`} className="bg-white px-1 py-1 border-t border-gray-100 min-h-[48px]">
+                      <div key={`${si}-${di}`} className="bg-white px-1 py-1 border-t border-gray-100 min-h-[60px]">
                         {items.map((item: any, ii: number) => (
-                          <div key={ii} title={item.nombre}
-                            className="text-[10px] px-1 py-0.5 rounded mb-0.5 truncate text-white font-medium"
-                            style={{ backgroundColor: item.edad?.color || (item.tipo === "academy" ? "#a855f7" : "#3b82f6") }}>
-                            {item.nombre.split(" ")[0]}
+                          <div key={ii}
+                            className="text-[10px] px-1 py-0.5 rounded mb-0.5 text-white font-medium leading-tight"
+                            style={{ backgroundColor: item.edad?.color || "#3b82f6" }}>
+                            <div className="truncate font-semibold">{item.mostrar || item.nombre}</div>
+                            {item.edad?.nombre && item.edad?.nombre !== "Academia" && (
+                              <div className="truncate opacity-80">{item.edad.nombre}</div>
+                            )}
                           </div>
                         ))}
                       </div>
@@ -302,9 +309,14 @@ export default function DashboardPage() {
                       <div>
                         <p className="font-semibold text-sm">{m.nombre}</p>
                         <p className="text-xs text-gray-400">{m.tipo === "academy" ? "Academia" : `DNI: ${m.dni}`}</p>
+                        <p className="text-[10px] text-gray-300">{new Date(m.hora_entrada).toLocaleTimeString("es-PE", { hour: "2-digit", minute: "2-digit" })}</p>
                       </div>
-                      <button onClick={() => handleQuitarDeUbicacion(m.attendance_id, selectedUb.nombre)}
-                        className="text-xs text-red-500 hover:text-red-700 font-medium">Quitar</button>
+                      <div className="flex gap-1">
+                        <button onClick={() => handleQuitarDeCarril(m.attendance_id, selectedUb.nombre)}
+                          className="text-xs text-orange-500 hover:text-orange-700 font-medium">Quitar</button>
+                        <button onClick={() => handleLiberar(m.attendance_id, m.nombre)}
+                          className="text-xs text-red-500 hover:text-red-700 font-medium">Liberar</button>
+                      </div>
                     </div>
                   </div>
                 ))}

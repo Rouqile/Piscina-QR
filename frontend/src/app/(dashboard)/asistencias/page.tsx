@@ -12,16 +12,27 @@ export default function AsistenciasPage() {
   const [search, setSearch] = useState("");
   const [selectedId, setSelectedId] = useState<string | null>(null);
   const [observacion, setObservacion] = useState("");
+  const [fechaInicio, setFechaInicio] = useState("");
+  const [fechaFin, setFechaFin] = useState("");
+  const [modo, setModo] = useState<"hoy" | "historial">("hoy");
 
   const fetchAttendances = async () => {
-    const params = search ? { search } : {};
-    const { data } = await api.get("/attendances/today", { params });
-    setAttendances(data);
+    if (modo === "hoy") {
+      const params = search ? { search } : {};
+      const { data } = await api.get("/attendances/today", { params });
+      setAttendances(data);
+    } else {
+      const params: Record<string, string> = {};
+      if (fechaInicio) params.fecha_inicio = fechaInicio;
+      if (fechaFin) params.fecha_fin = fechaFin;
+      const { data } = await api.get("/attendances/", { params });
+      setAttendances(data);
+    }
   };
 
   useEffect(() => {
     fetchAttendances();
-  }, [search]);
+  }, [search, modo]);
 
   const handleUpdate = async (id: string) => {
     try {
@@ -49,23 +60,49 @@ export default function AsistenciasPage() {
   return (
     <div>
       <div className="flex items-center justify-between mb-6">
-        <h1 className="text-2xl font-bold">Asistencias del dia</h1>
+        <h1 className="text-2xl font-bold">Asistencias</h1>
         <button onClick={fetchAttendances}
           className="px-3 py-1.5 text-sm bg-gray-100 text-gray-600 rounded-lg hover:bg-gray-200">
           Actualizar
         </button>
       </div>
 
-      <input type="text" placeholder="Buscar por nombre, apellidos o DNI..."
-        value={search} onChange={(e) => setSearch(e.target.value)}
-        className="w-full max-w-md px-4 py-2 border border-gray-300 rounded-lg mb-4" />
+      <div className="flex items-center gap-4 mb-4 flex-wrap">
+        <div className="flex bg-gray-100 rounded-lg p-1">
+          <button type="button" onClick={() => setModo("hoy")}
+            className={`px-4 py-1.5 rounded-md text-sm font-medium transition-colors ${
+              modo === "hoy" ? "bg-blue-600 text-white shadow-sm" : "text-gray-500 hover:text-gray-700"
+            }`}>Hoy</button>
+          <button type="button" onClick={() => setModo("historial")}
+            className={`px-4 py-1.5 rounded-md text-sm font-medium transition-colors ${
+              modo === "historial" ? "bg-blue-600 text-white shadow-sm" : "text-gray-500 hover:text-gray-700"
+            }`}>Historial</button>
+        </div>
+
+        {modo === "hoy" ? (
+          <input type="text" placeholder="Buscar por nombre, DNI o academia..."
+            value={search} onChange={(e) => setSearch(e.target.value)}
+            className="flex-1 max-w-md px-4 py-2 border border-gray-300 rounded-lg" />
+        ) : (
+          <div className="flex gap-2 items-center flex-wrap">
+            <input type="date" value={fechaInicio} onChange={(e) => setFechaInicio(e.target.value)}
+              className="px-3 py-2 border border-gray-300 rounded-lg text-sm" />
+            <span className="text-gray-400">a</span>
+            <input type="date" value={fechaFin} onChange={(e) => setFechaFin(e.target.value)}
+              className="px-3 py-2 border border-gray-300 rounded-lg text-sm" />
+            <button onClick={fetchAttendances}
+              className="px-4 py-2 bg-blue-600 text-white rounded-lg text-sm hover:bg-blue-700">Filtrar</button>
+          </div>
+        )}
+      </div>
 
       <div className="bg-white rounded-xl shadow-sm border border-gray-100 overflow-hidden">
         <table className="w-full text-sm">
           <thead>
             <tr className="border-b border-gray-100 bg-gray-50/80">
+              <th className="text-left px-4 py-3.5 text-xs font-semibold text-gray-500 uppercase tracking-wider">Fecha</th>
               <th className="text-left px-4 py-3.5 text-xs font-semibold text-gray-500 uppercase tracking-wider">Hora</th>
-              <th className="text-left px-4 py-3.5 text-xs font-semibold text-gray-500 uppercase tracking-wider">Miembro</th>
+              <th className="text-left px-4 py-3.5 text-xs font-semibold text-gray-500 uppercase tracking-wider">Nombre</th>
               <th className="text-left px-4 py-3.5 text-xs font-semibold text-gray-500 uppercase tracking-wider">DNI</th>
               <th className="text-left px-4 py-3.5 text-xs font-semibold text-gray-500 uppercase tracking-wider">Ubicacion</th>
               <th className="text-left px-4 py-3.5 text-xs font-semibold text-gray-500 uppercase tracking-wider">Observacion</th>
@@ -76,6 +113,7 @@ export default function AsistenciasPage() {
           <tbody className="divide-y divide-gray-50">
             {attendances.map((a) => (
               <tr key={a.id} className="hover:bg-blue-50/40 transition-colors">
+                <td className="px-4 py-3.5 text-gray-500 text-xs">{format(new Date(a.fecha), "dd/MM/yyyy")}</td>
                 <td className="px-4 py-3.5">{format(new Date(a.hora_entrada), "HH:mm")}</td>
                 <td className="px-4 py-3.5 font-medium">
                   {a.member_nombre || a.member_id?.slice(0, 8) || "Academia"}
@@ -87,7 +125,7 @@ export default function AsistenciasPage() {
                 <td className="px-4 py-3.5">
                   {a.ubicacion ? (
                     <span className="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium bg-blue-100 text-blue-700">
-                      {a.ubicacion}
+                      {(() => { try { const u = JSON.parse(a.ubicacion); return Array.isArray(u) ? u.join(", ") : a.ubicacion; } catch { return a.ubicacion; } })()}
                     </span>
                   ) : "-"}
                 </td>
@@ -104,7 +142,7 @@ export default function AsistenciasPage() {
             ))}
             {attendances.length === 0 && (
               <tr>
-                <td colSpan={7} className="px-4 py-12 text-center text-gray-400">No hay asistencias registradas hoy</td>
+                <td colSpan={8} className="px-4 py-12 text-center text-gray-400">No hay asistencias registradas</td>
               </tr>
             )}
           </tbody>

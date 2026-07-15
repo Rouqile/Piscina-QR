@@ -223,7 +223,18 @@ export default function VistaGeneralPage() {
             <h3 className="text-sm font-semibold text-gray-700 mb-2">Filtrar miembros</h3>
             <input type="text" placeholder="Buscar..." value={searchMembers} onChange={(e) => setSearchMembers(e.target.value)}
               className="w-full px-3 py-2 text-sm border border-gray-300 rounded-lg mb-3" />
-            <div className="space-y-1 max-h-40 overflow-y-auto">
+            <label className="flex items-center gap-2 px-2 py-1.5 rounded hover:bg-gray-50 cursor-pointer text-sm mb-1 border-b border-gray-100 pb-2">
+              <input type="checkbox"
+                checked={selectedMemberIds.length === filteredMembers.length && filteredMembers.length > 0}
+                onChange={() => {
+                  if (selectedMemberIds.length === filteredMembers.length) setSelectedMemberIds([]);
+                  else setSelectedMemberIds(filteredMembers.map((m) => m.id));
+                }}
+                className="rounded border-gray-300" />
+              <span className="font-medium text-gray-700">Todos los miembros</span>
+              <span className="text-gray-400 text-xs ml-auto">{filteredMembers.length}</span>
+            </label>
+            <div className="space-y-1 max-h-32 overflow-y-auto">
               {filteredMembers.map((m) => (
                 <label key={m.id} className="flex items-center gap-2 px-2 py-1.5 rounded hover:bg-gray-50 cursor-pointer text-sm">
                   <input type="checkbox" checked={selectedMemberIds.includes(m.id)} onChange={() => toggleMember(m.id)} className="rounded border-gray-300" />
@@ -238,7 +249,18 @@ export default function VistaGeneralPage() {
             <h3 className="text-sm font-semibold text-gray-700 mb-2">Filtrar academias</h3>
             <input type="text" placeholder="Buscar..." value={searchAcademies} onChange={(e) => setSearchAcademies(e.target.value)}
               className="w-full px-3 py-2 text-sm border border-gray-300 rounded-lg mb-3" />
-            <div className="space-y-1 max-h-40 overflow-y-auto">
+            <label className="flex items-center gap-2 px-2 py-1.5 rounded hover:bg-gray-50 cursor-pointer text-sm mb-1 border-b border-gray-100 pb-2">
+              <input type="checkbox"
+                checked={selectedAcademyIds.length === filteredAcademies.length && filteredAcademies.length > 0}
+                onChange={() => {
+                  if (selectedAcademyIds.length === filteredAcademies.length) setSelectedAcademyIds([]);
+                  else setSelectedAcademyIds(filteredAcademies.map((a) => a.id));
+                }}
+                className="rounded border-gray-300" />
+              <span className="font-medium text-gray-700">Todas las academias</span>
+              <span className="text-gray-400 text-xs ml-auto">{filteredAcademies.length}</span>
+            </label>
+            <div className="space-y-1 max-h-32 overflow-y-auto">
               {filteredAcademies.map((a) => (
                 <label key={a.id} className="flex items-center gap-2 px-2 py-1.5 rounded hover:bg-gray-50 cursor-pointer text-sm">
                   <input type="checkbox" checked={selectedAcademyIds.includes(a.id)} onChange={() => toggleAcademy(a.id)} className="rounded border-gray-300" />

@@ -46,12 +46,6 @@ def checkin_entry(
             detail="Miembro inactivo. No se permite el ingreso.",
         )
 
-    if info["ya_entro"]:
-        raise HTTPException(
-            status_code=status.HTTP_400_BAD_REQUEST,
-            detail="Ya registro entrada hoy",
-        )
-
     if not info["puede_entrar"]:
         raise HTTPException(
             status_code=status.HTTP_409_CONFLICT,

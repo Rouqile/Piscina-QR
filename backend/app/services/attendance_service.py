@@ -1,6 +1,5 @@
 from datetime import datetime, timezone
 
-from sqlalchemy import func
 from sqlalchemy.orm import Session
 
 from app.crud.crud_member import member_crud
@@ -68,15 +67,6 @@ def _get_member_info(db: Session, member):
 
     puede_entrar, aforo_actual, capacidad = check_capacity(db)
 
-    existing = (
-        db.query(Attendance)
-        .filter(
-            Attendance.member_id == member.id,
-            func.date(Attendance.fecha) == hoy,
-        )
-        .first()
-    )
-
     return {
         "member_id": str(member.id), "academy_id": None, "tipo": "member",
         "dni": member.dni,
@@ -85,25 +75,14 @@ def _get_member_info(db: Session, member):
         "horario_hoy": horario_hoy,
         "aforo_actual": aforo_actual,
         "capacidad_maxima": capacidad,
-        "puede_entrar": not bool(existing) and puede_entrar,
-        "ya_entro": bool(existing),
+        "puede_entrar": puede_entrar,
+        "ya_entro": False,
         "inactivo": False,
         "sin_horario_advertencia": not tiene_horario,
     }
 
 
 def _get_academy_info(db: Session, academy):
-    hoy = datetime.now(timezone.utc).date()
-
-    existing = (
-        db.query(Attendance)
-        .filter(
-            Attendance.academy_id == academy.id,
-            func.date(Attendance.fecha) == hoy,
-        )
-        .first()
-    )
-
     return {
         "member_id": None, "academy_id": str(academy.id), "tipo": "academy",
         "dni": None,
@@ -112,8 +91,8 @@ def _get_academy_info(db: Session, academy):
         "horario_hoy": None,
         "aforo_actual": 0,
         "capacidad_maxima": 0,
-        "puede_entrar": not bool(existing),
-        "ya_entro": bool(existing),
+        "puede_entrar": True,
+        "ya_entro": False,
         "inactivo": False,
         "sin_horario_advertencia": False,
     }
