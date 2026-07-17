@@ -71,8 +71,8 @@ piscinaQR/
 | GET | `/api/v1/members/{dni}/qr` | Sí | Generar QR (PNG) |
 | GET | `/api/v1/academies/` | Sí | Listar academias |
 | POST/PUT/DELETE | `/api/v1/academies/{id}` | Admin | CRUD academia |
-| GET | `/api/v1/age-ranges/` | Sí | Listar rangos de edad |
-| POST/PUT/DELETE | `/api/v1/age-ranges/{id}` | Admin | CRUD rango edad |
+| GET | `/api/v1/age-ranges/` | Sí | Listar categorias |
+| POST/PUT/DELETE | `/api/v1/age-ranges/{id}` | Admin | CRUD categoria |
 | GET | `/api/v1/memberships/` | Sí | Listar membresías |
 | POST | `/api/v1/memberships/` | Admin | Crear membresía |
 | GET | `/api/v1/schedule-slots/` | Sí | Listar horarios |
@@ -98,9 +98,9 @@ piscinaQR/
 ## Modelo de datos
 
 - **User**: usuarios del sistema (login)
-- **Member**: bañistas/ingresantes registrados (con rango_edad_id opcional)
+- **Member**: bañistas/ingresantes registrados (con categoria_id opcional)
 - **Academy**: academias con nombre y número de estudiantes
-- **AgeRange**: rangos de edad con nombre, edad min/max y color
+- **Categoria**: categorias con nombre, edad min/max y color
 - **Membership**: membresías con fechas y estado de pago
 - **ScheduleSlot**: horarios recurrentes (día de semana + hora incio/fin)
 - **Attendance**: registro de entrada (fecha, hora, observación)

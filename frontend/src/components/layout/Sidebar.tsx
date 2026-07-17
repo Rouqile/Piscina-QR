@@ -5,22 +5,26 @@ import { usePathname } from "next/navigation";
 import { useAuthStore } from "@/stores/authStore";
 
 const allItems = [
-  { href: "/dashboard", label: "Dashboard", roles: ["admin"] },
-  { href: "/miembros", label: "Miembros", roles: ["admin"] },
-  { href: "/academias", label: "Academias", roles: ["admin"] },
-  { href: "/turnos", label: "Turnos", roles: ["admin"] },
-  { href: "/asistencias", label: "Asistencias", roles: ["admin", "recepcionista"] },
-  { href: "/checkin", label: "Check-in QR", roles: ["admin", "recepcionista"] },
-  { href: "/reportes", label: "Reportes", roles: ["admin", "recepcionista"] },
-  { href: "/usuarios", label: "Usuarios", roles: ["admin"] },
-  { href: "/config", label: "Configuracion", roles: ["admin"] },
+  { href: "/dashboard", label: "Dashboard", key: "dashboard" },
+  { href: "/miembros", label: "Miembros", key: "miembros" },
+  { href: "/academias", label: "Academias", key: "academias" },
+  { href: "/turnos", label: "Turnos", key: "turnos" },
+  { href: "/asistencias", label: "Asistencias", key: "asistencias" },
+  { href: "/checkin", label: "Check-in QR", key: "checkin" },
+  { href: "/reportes", label: "Reportes", key: "reportes" },
+  { href: "/usuarios", label: "Usuarios", key: "usuarios" },
+  { href: "/config", label: "Configuracion", key: "config" },
 ];
 
 export default function Sidebar() {
   const pathname = usePathname();
   const user = useAuthStore((s) => s.user);
 
-  const menuItems = allItems.filter((item) => item.roles.includes(user?.rol || ""));
+  const menuItems = allItems.filter((item) => {
+    if (user?.rol === "admin") return true;
+    if (user?.permisos?.includes(item.key)) return true;
+    return false;
+  });
 
   return (
     <aside className="w-64 bg-white border-r border-gray-200 min-h-screen p-4">

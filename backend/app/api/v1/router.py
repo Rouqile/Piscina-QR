@@ -2,7 +2,7 @@ from fastapi import APIRouter
 
 from app.api.v1.endpoints import (
     academies,
-    age_ranges,
+    categorias,
     attendances,
     auth,
     checkin,
@@ -21,7 +21,7 @@ router = APIRouter(prefix="/api/v1")
 
 router.include_router(auth.router)
 router.include_router(academies.router)
-router.include_router(age_ranges.router)
+router.include_router(categorias.router)
 router.include_router(members.router)
 router.include_router(memberships.router)
 router.include_router(schedule_slots.router)

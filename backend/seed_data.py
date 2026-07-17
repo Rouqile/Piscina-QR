@@ -12,7 +12,7 @@ from app.models.horario import Horario
 from app.models.shift_assignment import ShiftAssignment
 from app.models.pool_config import PoolConfig
 from app.models.academy import Academy
-from app.models.age_range import AgeRange
+from app.models.categoria import Categoria
 
 
 def seed():
@@ -39,18 +39,18 @@ def seed():
             if existing_academy and not existing_academy.color:
                 existing_academy.color = "#a855f7"
                 print("Color asignado a academia existente.")
-        if not db.query(AgeRange).first():
-            rango_joven = AgeRange(
+        if not db.query(Categoria).first():
+            cat_joven = Categoria(
                 id=uuid.uuid4(), nombre="Joven", edad_min=15, edad_max=20, color="#8b5cf6",
             )
-            rango_adulto = AgeRange(
+            cat_adulto = Categoria(
                 id=uuid.uuid4(), nombre="Adulto", edad_min=21, edad_max=40, color="#3b82f6",
             )
-            rango_mayor = AgeRange(
+            cat_mayor = Categoria(
                 id=uuid.uuid4(), nombre="Mayor", edad_min=41, edad_max=80, color="#22c55e",
             )
-            db.add_all([rango_joven, rango_adulto, rango_mayor])
-            print("Rangos de edad creados.")
+            db.add_all([cat_joven, cat_adulto, cat_mayor])
+            print("Categorias creadas.")
         db.commit()
         db.close()
         return
@@ -88,30 +88,30 @@ def seed():
         db.add(academia_olimpo)
         print("Academia Olimpo creada.")
 
-    if not db.query(AgeRange).first():
-        rango_joven = AgeRange(
+    if not db.query(Categoria).first():
+        cat_joven = Categoria(
             id=uuid.uuid4(),
             nombre="Joven",
             edad_min=15,
             edad_max=20,
             color="#8b5cf6",
         )
-        rango_adulto = AgeRange(
+        cat_adulto = Categoria(
             id=uuid.uuid4(),
             nombre="Adulto",
             edad_min=21,
             edad_max=40,
             color="#3b82f6",
         )
-        rango_mayor = AgeRange(
+        cat_mayor = Categoria(
             id=uuid.uuid4(),
             nombre="Mayor",
             edad_min=41,
             edad_max=80,
             color="#22c55e",
         )
-        db.add_all([rango_joven, rango_adulto, rango_mayor])
-        print("Rangos de edad creados.")
+        db.add_all([cat_joven, cat_adulto, cat_mayor])
+        print("Categorias creadas.")
 
     pepito = Member(
         id=uuid.uuid4(),

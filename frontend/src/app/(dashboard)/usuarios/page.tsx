@@ -13,16 +13,31 @@ interface SystemUser {
   nombre: string;
   rol: string;
   is_active: boolean;
+  permisos: string[] | null;
   created_at: string;
 }
+
+const ALL_PERMISOS = [
+  { key: "dashboard", label: "Dashboard" },
+  { key: "miembros", label: "Miembros" },
+  { key: "academias", label: "Academias" },
+  { key: "turnos", label: "Turnos" },
+  { key: "asistencias", label: "Asistencias" },
+  { key: "checkin", label: "Check-in QR" },
+  { key: "reportes", label: "Reportes" },
+  { key: "usuarios", label: "Usuarios" },
+  { key: "config", label: "Configuracion" },
+];
+
+const defaultPermisos: string[] = [];
 
 export default function UsuariosPage() {
   const [users, setUsers] = useState<SystemUser[]>([]);
   const [showCreateModal, setShowCreateModal] = useState(false);
   const [showEditModal, setShowEditModal] = useState(false);
   const [editUser, setEditUser] = useState<SystemUser | null>(null);
-  const [createForm, setCreateForm] = useState({ username: "", email: "", password: "", nombre: "", rol: "recepcionista" });
-  const [editForm, setEditForm] = useState({ username: "", email: "", nombre: "", rol: "recepcionista", password: "", is_active: true });
+  const [createForm, setCreateForm] = useState({ username: "", email: "", password: "", nombre: "", rol: "recepcionista", permisos: defaultPermisos });
+  const [editForm, setEditForm] = useState({ username: "", email: "", nombre: "", rol: "recepcionista", password: "", is_active: true, permisos: defaultPermisos });
   const [loading, setLoading] = useState(false);
 
   const fetchUsers = async () => {
@@ -34,6 +49,12 @@ export default function UsuariosPage() {
     fetchUsers();
   }, []);
 
+  const togglePermiso = (form: any, setForm: any, key: string) => {
+    const current: string[] = form.permisos || [];
+    const next = current.includes(key) ? current.filter((p) => p !== key) : [...current, key];
+    setForm({ ...form, permisos: next });
+  };
+
   const handleCreate = async (e: React.FormEvent) => {
     e.preventDefault();
     setLoading(true);
@@ -41,7 +62,7 @@ export default function UsuariosPage() {
       await api.post("/users/", createForm);
       toast.success("Usuario creado");
       setShowCreateModal(false);
-      setCreateForm({ username: "", email: "", password: "", nombre: "", rol: "recepcionista" });
+      setCreateForm({ username: "", email: "", password: "", nombre: "", rol: "recepcionista", permisos: defaultPermisos });
       fetchUsers();
     } catch (err: any) {
       const d = err.response?.data?.detail;
@@ -60,6 +81,7 @@ export default function UsuariosPage() {
       rol: u.rol,
       password: "",
       is_active: u.is_active,
+      permisos: u.permisos || [],
     });
     setShowEditModal(true);
   };
@@ -75,6 +97,7 @@ export default function UsuariosPage() {
         nombre: editForm.nombre,
         rol: editForm.rol,
         is_active: editForm.is_active,
+        permisos: editForm.permisos,
       };
       if (editForm.password.trim()) payload.password = editForm.password;
       await api.put(`/users/${editUser.id}`, payload);
@@ -101,6 +124,26 @@ export default function UsuariosPage() {
     }
   };
 
+  const PermisosSelector = ({ value, onChange }: { value: string[]; onChange: (v: string[]) => void }) => {
+    const toggle = (key: string) => {
+      const next = value.includes(key) ? value.filter((p) => p !== key) : [...value, key];
+      onChange(next);
+    };
+    return (
+      <div>
+        <label className="block text-sm font-medium text-gray-700 mb-2">Permisos</label>
+        <div className="grid grid-cols-2 gap-2">
+          {ALL_PERMISOS.map((p) => (
+            <label key={p.key} className="flex items-center gap-2 px-3 py-2 border border-gray-200 rounded-lg cursor-pointer hover:bg-gray-50 text-sm">
+              <input type="checkbox" checked={value.includes(p.key)} onChange={() => toggle(p.key)} className="rounded border-gray-300 text-blue-600 focus:ring-blue-500" />
+              {p.label}
+            </label>
+          ))}
+        </div>
+      </div>
+    );
+  };
+
   return (
     <div>
       <div className="flex items-center justify-between mb-6">
@@ -123,48 +166,57 @@ export default function UsuariosPage() {
               <th className="text-left px-4 py-3.5 text-xs font-semibold text-gray-500 uppercase tracking-wider">Nombre</th>
               <th className="text-left px-4 py-3.5 text-xs font-semibold text-gray-500 uppercase tracking-wider">Email</th>
               <th className="text-left px-4 py-3.5 text-xs font-semibold text-gray-500 uppercase tracking-wider">Rol</th>
+              <th className="text-left px-4 py-3.5 text-xs font-semibold text-gray-500 uppercase tracking-wider">Permisos</th>
               <th className="text-left px-4 py-3.5 text-xs font-semibold text-gray-500 uppercase tracking-wider">Estado</th>
               <th className="text-left px-4 py-3.5 text-xs font-semibold text-gray-500 uppercase tracking-wider">Acciones</th>
             </tr>
           </thead>
           <tbody className="divide-y divide-gray-50">
-            {users.map((u) => (
-              <tr key={u.id} className="hover:bg-blue-50/40 transition-colors">
-                <td className="px-4 py-3.5 font-medium text-gray-900">{u.username}</td>
-                <td className="px-4 py-3.5 text-gray-700">{u.nombre}</td>
-                <td className="px-4 py-3.5 text-gray-400">{u.email}</td>
-                <td className="px-4 py-3.5">
-                  <span className="capitalize text-xs font-medium px-2 py-1 rounded-full bg-gray-100 text-gray-600">
-                    {u.rol === "admin" ? "Administrador" : "Asistencia"}
-                  </span>
-                </td>
-                <td className="px-4 py-3.5">
-                  <span className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-medium ${
-                    u.is_active ? "bg-emerald-50 text-emerald-700" : "bg-red-50 text-red-700"
-                  }`}>
-                    <span className={`w-1.5 h-1.5 rounded-full ${u.is_active ? "bg-emerald-500" : "bg-red-500"}`} />
-                    {u.is_active ? "Activo" : "Inactivo"}
-                  </span>
-                </td>
-                <td className="px-4 py-3.5">
-                  <div className="flex items-center gap-1">
-                    <button onClick={() => openEdit(u)}
-                      className="p-2 text-gray-400 hover:text-blue-600 hover:bg-blue-50 rounded-lg transition-colors"
-                      title="Editar">
-                      <EditIcon className="w-4 h-4" />
-                    </button>
-                    <button onClick={() => handleDelete(u)}
-                      className="p-2 text-gray-400 hover:text-red-600 hover:bg-red-50 rounded-lg transition-colors"
-                      title="Eliminar">
-                      <DeleteIcon className="w-4 h-4" />
-                    </button>
-                  </div>
-                </td>
-              </tr>
-            ))}
+            {users.map((u) => {
+              const permLabels = u.rol === "admin"
+                ? "Todos"
+                : (u.permisos?.length
+                  ? u.permisos.map((k) => ALL_PERMISOS.find((p) => p.key === k)?.label || k).join(", ")
+                  : "Ninguno");
+              return (
+                <tr key={u.id} className="hover:bg-blue-50/40 transition-colors">
+                  <td className="px-4 py-3.5 font-medium text-gray-900">{u.username}</td>
+                  <td className="px-4 py-3.5 text-gray-700">{u.nombre}</td>
+                  <td className="px-4 py-3.5 text-gray-400">{u.email}</td>
+                  <td className="px-4 py-3.5">
+                    <span className="capitalize text-xs font-medium px-2 py-1 rounded-full bg-gray-100 text-gray-600">
+                      {u.rol === "admin" ? "Administrador" : "Personalizado"}
+                    </span>
+                  </td>
+                  <td className="px-4 py-3.5 text-xs text-gray-500 max-w-[200px] truncate" title={permLabels}>{permLabels}</td>
+                  <td className="px-4 py-3.5">
+                    <span className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-medium ${
+                      u.is_active ? "bg-emerald-50 text-emerald-700" : "bg-red-50 text-red-700"
+                    }`}>
+                      <span className={`w-1.5 h-1.5 rounded-full ${u.is_active ? "bg-emerald-500" : "bg-red-500"}`} />
+                      {u.is_active ? "Activo" : "Inactivo"}
+                    </span>
+                  </td>
+                  <td className="px-4 py-3.5">
+                    <div className="flex items-center gap-1">
+                      <button onClick={() => openEdit(u)}
+                        className="p-2 text-gray-400 hover:text-blue-600 hover:bg-blue-50 rounded-lg transition-colors"
+                        title="Editar">
+                        <EditIcon className="w-4 h-4" />
+                      </button>
+                      <button onClick={() => handleDelete(u)}
+                        className="p-2 text-gray-400 hover:text-red-600 hover:bg-red-50 rounded-lg transition-colors"
+                        title="Eliminar">
+                        <DeleteIcon className="w-4 h-4" />
+                      </button>
+                    </div>
+                  </td>
+                </tr>
+              );
+            })}
             {users.length === 0 && (
               <tr>
-                <td colSpan={6} className="px-4 py-12 text-center text-gray-400">
+                <td colSpan={7} className="px-4 py-12 text-center text-gray-400">
                   <div className="flex flex-col items-center gap-2">
                     <svg className="w-8 h-8 text-gray-300" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
                       <path strokeLinecap="round" strokeLinejoin="round" d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197M13 7a4 4 0 11-8 0 4 4 0 018 0z" />
@@ -196,10 +248,13 @@ export default function UsuariosPage() {
             <label className="block text-sm font-medium text-gray-700 mb-1">Rol</label>
             <select value={createForm.rol} onChange={(e) => setCreateForm({ ...createForm, rol: e.target.value })}
               className="w-full px-4 py-2 border border-gray-200 rounded-lg outline-none focus:ring-2 focus:ring-blue-500">
-              <option value="admin">Administrador</option>
-              <option value="recepcionista">Asistencia (solo Check-in)</option>
+              <option value="admin">Administrador (acceso total)</option>
+              <option value="recepcionista">Personalizado (elige permisos abajo)</option>
             </select>
           </div>
+          {createForm.rol !== "admin" && (
+            <PermisosSelector value={createForm.permisos} onChange={(v) => setCreateForm({ ...createForm, permisos: v })} />
+          )}
           <button type="submit" disabled={loading}
             className="w-full py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 disabled:opacity-50 font-medium transition-colors">
             {loading ? "Creando..." : "Crear usuario"}
@@ -223,10 +278,13 @@ export default function UsuariosPage() {
             <label className="block text-sm font-medium text-gray-700 mb-1">Rol</label>
             <select value={editForm.rol} onChange={(e) => setEditForm({ ...editForm, rol: e.target.value })}
               className="w-full px-4 py-2 border border-gray-200 rounded-lg outline-none focus:ring-2 focus:ring-blue-500">
-              <option value="admin">Administrador</option>
-              <option value="recepcionista">Asistencia (solo Check-in)</option>
+              <option value="admin">Administrador (acceso total)</option>
+              <option value="recepcionista">Personalizado (elige permisos abajo)</option>
             </select>
           </div>
+          {editForm.rol !== "admin" && (
+            <PermisosSelector value={editForm.permisos} onChange={(v) => setEditForm({ ...editForm, permisos: v })} />
+          )}
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-1">Nueva contrasena <span className="text-gray-400 font-normal">(dejar vacio para mantener la actual)</span></label>
             <input type="password" placeholder="Nueva contrasena" value={editForm.password}

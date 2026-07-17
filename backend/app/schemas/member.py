@@ -12,7 +12,7 @@ class MemberCreate(BaseModel):
     email: str | None = None
     telefono: str | None = None
     fecha_nacimiento: date | None = None
-    rango_edad_id: str | None = None
+    categoria_id: str | None = None
     observaciones_medicas: str | None = None
     otras_observaciones: str | None = None
     is_active: bool = True
@@ -26,7 +26,7 @@ class MemberUpdate(BaseModel):
     email: str | None = None
     telefono: str | None = None
     fecha_nacimiento: date | None = None
-    rango_edad_id: str | None = None
+    categoria_id: str | None = None
     observaciones_medicas: str | None = None
     otras_observaciones: str | None = None
     is_active: bool | None = None
@@ -43,7 +43,7 @@ class MemberResponse(BaseModel):
     email: str | None
     telefono: str | None
     fecha_nacimiento: date | None
-    rango_edad_id: uuid.UUID | None
+    categoria_id: uuid.UUID | None
     observaciones_medicas: str | None
     otras_observaciones: str | None
     foto_url: str | None

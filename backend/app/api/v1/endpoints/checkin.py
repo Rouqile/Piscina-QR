@@ -46,12 +46,6 @@ def checkin_entry(
             detail="Miembro inactivo. No se permite el ingreso.",
         )
 
-    if not info["puede_entrar"]:
-        raise HTTPException(
-            status_code=status.HTTP_409_CONFLICT,
-            detail="Aforo completo, no se puede registrar la entrada",
-        )
-
     ubicacion_json = None
     if body.ubicaciones:
         ubicacion_json = json.dumps(body.ubicaciones)

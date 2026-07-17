@@ -7,7 +7,7 @@ from app.models.pool_config import PoolConfig
 from app.models.horario import Horario
 from app.models.shift_assignment import ShiftAssignment
 from app.models.academy import Academy
-from app.models.age_range import AgeRange
+from app.models.categoria import Categoria
 
 __all__ = [
     "User",
@@ -19,5 +19,5 @@ __all__ = [
     "Horario",
     "ShiftAssignment",
     "Academy",
-    "AgeRange",
+    "Categoria",
 ]

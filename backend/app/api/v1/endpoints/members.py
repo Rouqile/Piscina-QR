@@ -36,13 +36,13 @@ def create_member(
             detail="Ya existe un miembro con ese DNI",
         )
     create_data = body.model_dump()
-    if create_data.get("rango_edad_id"):
-        from app.models.age_range import AgeRange
-        ar = db.query(AgeRange).filter(AgeRange.id == create_data["rango_edad_id"]).first()
-        if not ar:
-            raise HTTPException(status_code=400, detail="Rango de edad no encontrado")
-    if not create_data.get("rango_edad_id"):
-        create_data["rango_edad_id"] = None
+    if create_data.get("categoria_id"):
+        from app.models.categoria import Categoria
+        cat = db.query(Categoria).filter(Categoria.id == create_data["categoria_id"]).first()
+        if not cat:
+            raise HTTPException(status_code=400, detail="Categoria no encontrada")
+    if not create_data.get("categoria_id"):
+        create_data["categoria_id"] = None
     from app.models.member import Member as MemberModel
     db_obj = MemberModel(**create_data)
     db.add(db_obj)
@@ -78,13 +78,13 @@ def update_member(
             status_code=status.HTTP_404_NOT_FOUND, detail="Miembro no encontrado"
         )
     update_data = body.model_dump(exclude_unset=True)
-    if "rango_edad_id" in update_data and update_data["rango_edad_id"]:
-        from app.models.age_range import AgeRange
-        ar = db.query(AgeRange).filter(AgeRange.id == update_data["rango_edad_id"]).first()
-        if not ar:
-            raise HTTPException(status_code=400, detail="Rango de edad no encontrado")
-    if "rango_edad_id" in update_data and not update_data["rango_edad_id"]:
-        update_data["rango_edad_id"] = None
+    if "categoria_id" in update_data and update_data["categoria_id"]:
+        from app.models.categoria import Categoria
+        cat = db.query(Categoria).filter(Categoria.id == update_data["categoria_id"]).first()
+        if not cat:
+            raise HTTPException(status_code=400, detail="Categoria no encontrada")
+    if "categoria_id" in update_data and not update_data["categoria_id"]:
+        update_data["categoria_id"] = None
     for field, value in update_data.items():
         setattr(member, field, value)
     db.commit()

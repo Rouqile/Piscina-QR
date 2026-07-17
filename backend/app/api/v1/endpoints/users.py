@@ -1,3 +1,5 @@
+import json
+
 from fastapi import APIRouter, Depends, HTTPException, status
 from sqlalchemy.orm import Session
 
@@ -10,12 +12,26 @@ from app.schemas.user import UserCreate, UserResponse, UserUpdate
 router = APIRouter(prefix="/users", tags=["users"])
 
 
+def _serialize_user(user) -> dict:
+    return {
+        "id": user.id,
+        "username": user.username,
+        "email": user.email,
+        "nombre": user.nombre,
+        "rol": user.rol,
+        "is_active": user.is_active,
+        "permisos": json.loads(user.permisos) if user.permisos else None,
+        "created_at": user.created_at,
+    }
+
+
 @router.get("/", response_model=list[UserResponse])
 def list_users(
     db: Session = Depends(get_db),
     _=Depends(require_admin),
 ):
-    return user_crud.get_all(db)
+    users = user_crud.get_all(db)
+    return [_serialize_user(u) for u in users]
 
 
 @router.post("/", response_model=UserResponse, status_code=status.HTTP_201_CREATED)
@@ -45,10 +61,13 @@ def create_user(
     )
     from app.models.user import User
 
-    db.query(User).filter(User.id == user.id).update({"rol": body.rol})
+    update_fields = {"rol": body.rol}
+    if body.permisos is not None:
+        update_fields["permisos"] = json.dumps(body.permisos)
+    db.query(User).filter(User.id == user.id).update(update_fields)
     db.commit()
     db.refresh(user)
-    return user
+    return _serialize_user(user)
 
 
 @router.put("/{user_id}", response_model=UserResponse)
@@ -67,11 +86,16 @@ def update_user(
     update_data = body.model_dump(exclude_unset=True)
     if "password" in update_data and update_data["password"]:
         update_data["hashed_password"] = hash_password(update_data.pop("password"))
+    if "permisos" in update_data:
+        if update_data["permisos"] is not None:
+            update_data["permisos"] = json.dumps(update_data["permisos"])
+        else:
+            update_data["permisos"] = None
     for field, value in update_data.items():
         setattr(user, field, value)
     db.commit()
     db.refresh(user)
-    return user
+    return _serialize_user(user)
 
 
 @router.delete("/{user_id}", status_code=status.HTTP_204_NO_CONTENT)

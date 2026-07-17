@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from "react";
 import api from "@/services/api";
-import type { AgeRange } from "@/types";
+import type { Categoria } from "@/types";
 import Modal from "@/components/ui/Modal";
 import { PlusIcon, EditIcon, DeleteIcon } from "@/components/ui/Icons";
 import { toast } from "sonner";
@@ -22,10 +22,10 @@ export default function ConfigPage() {
   const [instTelefono, setInstTelefono] = useState("");
   const [instEmail, setInstEmail] = useState("");
   const [loading, setLoading] = useState(false);
-  const [ageRanges, setAgeRanges] = useState<AgeRange[]>([]);
-  const [showArModal, setShowArModal] = useState(false);
-  const [editingAr, setEditingAr] = useState<AgeRange | null>(null);
-  const [arForm, setArForm] = useState({ nombre: "", edad_min: 0, edad_max: 0, color: "#6366f1" });
+  const [categorias, setCategorias] = useState<Categoria[]>([]);
+  const [showCatModal, setShowCatModal] = useState(false);
+  const [editingCat, setEditingCat] = useState<Categoria | null>(null);
+  const [catForm, setCatForm] = useState({ nombre: "", edad_min: 0, edad_max: 0, color: "#6366f1" });
 
   useEffect(() => {
     api.get("/pool-config/").then(({ data }) => {
@@ -36,7 +36,7 @@ export default function ConfigPage() {
       setInstTelefono(data.institucion_telefono || "");
       setInstEmail(data.institucion_email || "");
     });
-    api.get("/age-ranges/").then(({ data }) => setAgeRanges(data)).catch(() => {});
+    api.get("/age-ranges/").then(({ data }) => setCategorias(data)).catch(() => {});
   }, []);
 
   const addCarril = () => {
@@ -78,43 +78,43 @@ export default function ConfigPage() {
     }
   };
 
-  const openCreateAr = () => {
-    const usedColors = ageRanges.map((r) => r.color);
+  const openCreateCat = () => {
+    const usedColors = categorias.map((c) => c.color);
     const nextColor = DEFAULT_COLORS.find((c) => !usedColors.includes(c)) || "#6366f1";
-    setEditingAr(null);
-    setArForm({ nombre: "", edad_min: 0, edad_max: 0, color: nextColor });
-    setShowArModal(true);
+    setEditingCat(null);
+    setCatForm({ nombre: "", edad_min: 0, edad_max: 0, color: nextColor });
+    setShowCatModal(true);
   };
 
-  const openEditAr = (ar: AgeRange) => {
-    setEditingAr(ar);
-    setArForm({ nombre: ar.nombre, edad_min: ar.edad_min, edad_max: ar.edad_max, color: ar.color });
-    setShowArModal(true);
+  const openEditCat = (cat: Categoria) => {
+    setEditingCat(cat);
+    setCatForm({ nombre: cat.nombre, edad_min: cat.edad_min, edad_max: cat.edad_max, color: cat.color });
+    setShowCatModal(true);
   };
 
-  const handleArSubmit = async (e: React.FormEvent) => {
+  const handleCatSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     try {
-      if (editingAr) {
-        await api.put(`/age-ranges/${editingAr.id}`, arForm);
-        toast.success("Rango de edad actualizado");
+      if (editingCat) {
+        await api.put(`/age-ranges/${editingCat.id}`, catForm);
+        toast.success("Categoria actualizada");
       } else {
-        await api.post("/age-ranges/", arForm);
-        toast.success("Rango de edad creado");
+        await api.post("/age-ranges/", catForm);
+        toast.success("Categoria creada");
       }
-      setShowArModal(false);
-      api.get("/age-ranges/").then(({ data }) => setAgeRanges(data));
+      setShowCatModal(false);
+      api.get("/age-ranges/").then(({ data }) => setCategorias(data));
     } catch (err: any) {
       toast.error(err.response?.data?.detail || "Error");
     }
   };
 
-  const handleDeleteAr = async (id: string, nombre: string) => {
-    if (!confirm(`Eliminar el rango de edad "${nombre}"?`)) return;
+  const handleDeleteCat = async (id: string, nombre: string) => {
+    if (!confirm(`Eliminar la categoria "${nombre}"?`)) return;
     try {
       await api.delete(`/age-ranges/${id}`);
-      toast.success("Rango de edad eliminado");
-      api.get("/age-ranges/").then(({ data }) => setAgeRanges(data));
+      toast.success("Categoria eliminada");
+      api.get("/age-ranges/").then(({ data }) => setCategorias(data));
     } catch (err: any) {
       toast.error(err.response?.data?.detail || "Error");
     }
@@ -185,29 +185,29 @@ export default function ConfigPage() {
 
       <div className="bg-white rounded-xl shadow-sm p-6 mb-6">
         <div className="flex items-center justify-between mb-4">
-          <h2 className="text-lg font-semibold">Rangos de edad</h2>
-          <button onClick={openCreateAr}
-            className="px-3 py-1.5 text-sm bg-blue-600 text-white rounded-lg hover:bg-blue-700">+ Nuevo rango</button>
+          <h2 className="text-lg font-semibold">Categorias</h2>
+          <button onClick={openCreateCat}
+            className="px-3 py-1.5 text-sm bg-blue-600 text-white rounded-lg hover:bg-blue-700">+ Nueva categoria</button>
         </div>
-        <p className="text-sm text-gray-500 mb-4">Configure los rangos de edad con colores para asignar a los miembros.</p>
+        <p className="text-sm text-gray-500 mb-4">Configure las categorias con colores para asignar a los miembros.</p>
         <div className="space-y-2">
-          {ageRanges.map((ar) => (
-            <div key={ar.id} className="flex items-center gap-3 bg-gray-50 rounded-lg px-4 py-2">
-              <span className="w-4 h-4 rounded-full" style={{ backgroundColor: ar.color }} />
-              <span className="font-medium text-sm flex-1">{ar.nombre}</span>
-              <span className="text-xs text-gray-500">{ar.edad_min} - {ar.edad_max} años</span>
-              <button onClick={() => openEditAr(ar)}
+          {categorias.map((cat) => (
+            <div key={cat.id} className="flex items-center gap-3 bg-gray-50 rounded-lg px-4 py-2">
+              <span className="w-4 h-4 rounded-full" style={{ backgroundColor: cat.color }} />
+              <span className="font-medium text-sm flex-1">{cat.nombre}</span>
+              <span className="text-xs text-gray-500">{cat.edad_min} - {cat.edad_max} años</span>
+              <button onClick={() => openEditCat(cat)}
                 className="p-1.5 text-gray-400 hover:text-blue-600 rounded transition-colors" title="Editar">
                 <EditIcon className="w-4 h-4" />
               </button>
-              <button onClick={() => handleDeleteAr(ar.id, ar.nombre)}
+              <button onClick={() => handleDeleteCat(cat.id, cat.nombre)}
                 className="p-1.5 text-gray-400 hover:text-red-600 rounded transition-colors" title="Eliminar">
                 <DeleteIcon className="w-4 h-4" />
               </button>
             </div>
           ))}
-          {ageRanges.length === 0 && (
-            <p className="text-gray-400 text-sm text-center py-4">No hay rangos de edad configurados.</p>
+          {categorias.length === 0 && (
+            <p className="text-gray-400 text-sm text-center py-4">No hay categorias configuradas.</p>
           )}
         </div>
       </div>
@@ -217,50 +217,50 @@ export default function ConfigPage() {
         {loading ? "Guardando..." : "Guardar cambios de configuracion"}
       </button>
 
-      <Modal open={showArModal} onClose={() => setShowArModal(false)}
-        title={editingAr ? "Editar rango de edad" : "Nuevo rango de edad"}>
-        <form onSubmit={handleArSubmit} className="space-y-4">
-          <input type="text" placeholder="Nombre del rango *" value={arForm.nombre}
-            onChange={(e) => setArForm({ ...arForm, nombre: e.target.value })}
+      <Modal open={showCatModal} onClose={() => setShowCatModal(false)}
+        title={editingCat ? "Editar categoria" : "Nueva categoria"}>
+        <form onSubmit={handleCatSubmit} className="space-y-4">
+          <input type="text" placeholder="Nombre de la categoria *" value={catForm.nombre}
+            onChange={(e) => setCatForm({ ...catForm, nombre: e.target.value })}
             className="w-full px-4 py-2 border border-gray-300 rounded-lg" required />
           <div className="grid grid-cols-2 gap-3">
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-1">Edad minima</label>
-              <input type="number" min={0} max={120} value={arForm.edad_min}
-                onChange={(e) => setArForm({ ...arForm, edad_min: parseInt(e.target.value) || 0 })}
+              <input type="number" min={0} max={120} value={catForm.edad_min}
+                onChange={(e) => setCatForm({ ...catForm, edad_min: parseInt(e.target.value) || 0 })}
                 className="w-full px-4 py-2 border border-gray-300 rounded-lg" required />
             </div>
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-1">Edad maxima</label>
-              <input type="number" min={0} max={120} value={arForm.edad_max}
-                onChange={(e) => setArForm({ ...arForm, edad_max: parseInt(e.target.value) || 0 })}
+              <input type="number" min={0} max={120} value={catForm.edad_max}
+                onChange={(e) => setCatForm({ ...catForm, edad_max: parseInt(e.target.value) || 0 })}
                 className="w-full px-4 py-2 border border-gray-300 rounded-lg" required />
             </div>
           </div>
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-1">Color</label>
             <div className="flex items-center gap-3">
-              <input type="color" value={arForm.color}
-                onChange={(e) => setArForm({ ...arForm, color: e.target.value })}
+              <input type="color" value={catForm.color}
+                onChange={(e) => setCatForm({ ...catForm, color: e.target.value })}
                 className="w-10 h-10 p-0.5 border border-gray-300 rounded cursor-pointer" />
               <div className="flex gap-1 flex-wrap">
                 {DEFAULT_COLORS.map((c) => (
-                  <button key={c} type="button" onClick={() => setArForm({ ...arForm, color: c })}
+                  <button key={c} type="button" onClick={() => setCatForm({ ...catForm, color: c })}
                     className={`w-6 h-6 rounded-full border-2 transition-all ${
-                      arForm.color === c ? "border-gray-800 scale-110" : "border-transparent"
+                      catForm.color === c ? "border-gray-800 scale-110" : "border-transparent"
                     }`} style={{ backgroundColor: c }} />
                 ))}
               </div>
             </div>
           </div>
           <div className="flex items-center gap-2 p-3 bg-gray-50 rounded-lg">
-            <span className="w-4 h-4 rounded-full" style={{ backgroundColor: arForm.color }} />
-            <span className="text-sm font-medium">{arForm.nombre || "Vista previa"}</span>
-            <span className="text-xs text-gray-500">({arForm.edad_min}-{arForm.edad_max} años)</span>
+            <span className="w-4 h-4 rounded-full" style={{ backgroundColor: catForm.color }} />
+            <span className="text-sm font-medium">{catForm.nombre || "Vista previa"}</span>
+            <span className="text-xs text-gray-500">({catForm.edad_min}-{catForm.edad_max} años)</span>
           </div>
           <button type="submit"
             className="w-full py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700">
-            {editingAr ? "Guardar cambios" : "Crear rango"}
+            {editingCat ? "Guardar cambios" : "Crear categoria"}
           </button>
         </form>
       </Modal>

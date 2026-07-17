@@ -21,8 +21,8 @@ class Member(Base):
     email: Mapped[str | None] = mapped_column(String(255), nullable=True)
     telefono: Mapped[str | None] = mapped_column(String(20), nullable=True)
     fecha_nacimiento: Mapped[datetime | None] = mapped_column(Date, nullable=True)
-    rango_edad_id: Mapped[uuid.UUID | None] = mapped_column(
-        UUID(as_uuid=True), ForeignKey("age_ranges.id"), nullable=True
+    categoria_id: Mapped[uuid.UUID | None] = mapped_column(
+        UUID(as_uuid=True), ForeignKey("categorias.id"), nullable=True
     )
     observaciones_medicas: Mapped[str | None] = mapped_column(Text, nullable=True)
     otras_observaciones: Mapped[str | None] = mapped_column(Text, nullable=True)
@@ -37,4 +37,4 @@ class Member(Base):
         onupdate=lambda: datetime.now(timezone.utc),
     )
 
-    rango_edad: Mapped["AgeRange | None"] = relationship("AgeRange", backref="members")
+    categoria: Mapped["Categoria | None"] = relationship("Categoria", backref="members")

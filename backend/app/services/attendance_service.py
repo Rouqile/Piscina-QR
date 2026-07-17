@@ -31,6 +31,13 @@ def get_checkin_info(db: Session, identifier: str):
 
 
 def _get_member_info(db: Session, member):
+    categoria_nombre = None
+    if member.categoria_id:
+        from app.models.categoria import Categoria
+        cat = db.query(Categoria).filter(Categoria.id == member.categoria_id).first()
+        if cat:
+            categoria_nombre = cat.nombre
+
     if not member.is_active:
         return {
             "member_id": str(member.id), "academy_id": None, "tipo": "member",
@@ -40,6 +47,7 @@ def _get_member_info(db: Session, member):
             "aforo_actual": 0, "capacidad_maxima": 0,
             "puede_entrar": False, "ya_entro": False,
             "inactivo": True, "sin_horario_advertencia": False,
+            "categoria_nombre": categoria_nombre,
         }
 
     today = datetime.now(timezone.utc)
@@ -65,7 +73,7 @@ def _get_member_info(db: Session, member):
             h_fin = "--:--"
         horario_hoy = f"{h_ini} - {h_fin}"
 
-    puede_entrar, aforo_actual, capacidad = check_capacity(db)
+    _, aforo_actual, capacidad = check_capacity(db)
 
     return {
         "member_id": str(member.id), "academy_id": None, "tipo": "member",
@@ -75,10 +83,11 @@ def _get_member_info(db: Session, member):
         "horario_hoy": horario_hoy,
         "aforo_actual": aforo_actual,
         "capacidad_maxima": capacidad,
-        "puede_entrar": puede_entrar,
+        "puede_entrar": True,
         "ya_entro": False,
         "inactivo": False,
         "sin_horario_advertencia": not tiene_horario,
+        "categoria_nombre": categoria_nombre,
     }
 
 

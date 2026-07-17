@@ -4,6 +4,7 @@ export interface UserMe {
   email: string;
   nombre: string;
   rol: "admin" | "recepcionista";
+  permisos?: string[] | null;
 }
 
 export interface Member {
@@ -15,7 +16,7 @@ export interface Member {
   email: string | null;
   telefono: string | null;
   fecha_nacimiento: string | null;
-  rango_edad_id: string | null;
+  categoria_id: string | null;
   observaciones_medicas: string | null;
   otras_observaciones: string | null;
   foto_url: string | null;
@@ -32,7 +33,7 @@ export interface Academy {
   created_at: string;
 }
 
-export interface AgeRange {
+export interface Categoria {
   id: string;
   nombre: string;
   edad_min: number;
@@ -91,6 +92,7 @@ export interface CheckinInfo {
   ya_entro: boolean;
   inactivo?: boolean;
   sin_horario_advertencia?: boolean;
+  categoria_nombre?: string | null;
 }
 
 export interface DashboardStats {

@@ -4,21 +4,21 @@ from datetime import datetime
 from pydantic import BaseModel, ConfigDict
 
 
-class AgeRangeCreate(BaseModel):
+class CategoriaCreate(BaseModel):
     nombre: str
     edad_min: int
     edad_max: int
     color: str = "#6366f1"
 
 
-class AgeRangeUpdate(BaseModel):
+class CategoriaUpdate(BaseModel):
     nombre: str | None = None
     edad_min: int | None = None
     edad_max: int | None = None
     color: str | None = None
 
 
-class AgeRangeResponse(BaseModel):
+class CategoriaResponse(BaseModel):
     model_config = ConfigDict(from_attributes=True)
 
     id: uuid.UUID

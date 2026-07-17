@@ -167,7 +167,12 @@ export default function CheckinPage() {
                 {info.tipo === "academy" ? (
                   <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-purple-100 text-purple-700 mt-1">Academia</span>
                 ) : (
-                  <p className="text-gray-500">DNI: {info.dni}</p>
+                  <div className="space-y-1">
+                    <p className="text-gray-500">Codigo: {info.dni}</p>
+                    {info.categoria_nombre && (
+                      <p className="text-sm font-medium text-gray-600">Categoria: {info.categoria_nombre}</p>
+                    )}
+                  </div>
                 )}
               </div>
 
@@ -179,7 +184,7 @@ export default function CheckinPage() {
 
               {info.inactivo ? (
                 <div className="bg-gray-100 text-gray-500 text-center py-3 rounded-lg font-medium">Miembro inactivo</div>
-              ) : info.puede_entrar ? (
+              ) : (
                 <div className="space-y-3">
                   <div>
                     <label className="block text-sm font-medium text-gray-700 mb-2">
@@ -224,8 +229,6 @@ export default function CheckinPage() {
                     {loading ? "Registrando..." : "Registrar entrada"}
                   </button>
                 </div>
-              ) : (
-                <div className="bg-red-50 text-red-700 text-center py-3 rounded-lg font-medium">Aforo completo</div>
               )}
             </div>
           )}

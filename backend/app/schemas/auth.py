@@ -26,3 +26,4 @@ class UserMe(BaseModel):
     email: str
     nombre: str
     rol: str
+    permisos: list[str] | None = None

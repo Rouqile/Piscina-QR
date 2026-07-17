@@ -12,7 +12,7 @@ from app.models.attendance import Attendance
 from app.models.member import Member
 from app.models.academy import Academy
 from app.models.shift_assignment import ShiftAssignment
-from app.models.age_range import AgeRange
+from app.models.categoria import Categoria
 
 router = APIRouter(prefix="/dashboard", tags=["dashboard"])
 
@@ -233,10 +233,10 @@ def cronograma_semanal(
                             nombre = a.member.nombre
                             apellidos = a.member.apellidos or ""
                             mostrar = f"{nombre} {apellidos}".strip()
-                            if a.member.rango_edad_id:
-                                ar = db.query(AgeRange).filter(AgeRange.id == a.member.rango_edad_id).first()
-                                if ar:
-                                    edad = {"id": str(ar.id), "nombre": ar.nombre, "color": ar.color}
+                            if a.member.categoria_id:
+                                cat = db.query(Categoria).filter(Categoria.id == a.member.categoria_id).first()
+                                if cat:
+                                    edad = {"id": str(cat.id), "nombre": cat.nombre, "color": cat.color}
                         elif a.academy:
                             nombre = a.academy.nombre
                             mostrar = f"{nombre} (Academia)"

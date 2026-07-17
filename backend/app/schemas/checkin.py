@@ -18,6 +18,7 @@ class CheckinInfo(BaseModel):
     ya_entro: bool = False
     inactivo: bool = False
     sin_horario_advertencia: bool = False
+    categoria_nombre: str | None = None
 
 
 class CheckinEntry(BaseModel):

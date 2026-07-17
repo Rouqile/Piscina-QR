@@ -10,6 +10,7 @@ class UserCreate(BaseModel):
     password: str
     nombre: str
     rol: str = "recepcionista"
+    permisos: list[str] | None = None
 
 
 class UserUpdate(BaseModel):
@@ -19,6 +20,7 @@ class UserUpdate(BaseModel):
     nombre: str | None = None
     rol: str | None = None
     is_active: bool | None = None
+    permisos: list[str] | None = None
 
 
 class UserResponse(BaseModel):
@@ -30,4 +32,5 @@ class UserResponse(BaseModel):
     nombre: str
     rol: str
     is_active: bool
+    permisos: list[str] | None = None
     created_at: datetime

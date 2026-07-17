@@ -3,7 +3,7 @@
 import { useEffect, useState, Suspense } from "react";
 import { useSearchParams } from "next/navigation";
 import api from "@/services/api";
-import type { Member, AgeRange } from "@/types";
+import type { Member, Categoria } from "@/types";
 import Modal from "@/components/ui/Modal";
 import { EditIcon, DeleteIcon, DownloadIcon, PlusIcon } from "@/components/ui/Icons";
 import { toast } from "sonner";
@@ -12,19 +12,19 @@ import { useAuthStore } from "@/stores/authStore";
 function MiembrosContent() {
   const searchParams = useSearchParams();
   const [members, setMembers] = useState<Member[]>([]);
-  const [ageRanges, setAgeRanges] = useState<AgeRange[]>([]);
+  const [categorias, setCategorias] = useState<Categoria[]>([]);
   const [search, setSearch] = useState(searchParams.get("search") || "");
   const [showCreateModal, setShowCreateModal] = useState(false);
   const [showEditModal, setShowEditModal] = useState(false);
   const [editMember, setEditMember] = useState<Member | null>(null);
   const [form, setForm] = useState({
     dni: "", codigo_unico: "", nombre: "", apellidos: "", email: "", telefono: "",
-    fecha_nacimiento: "", rango_edad_id: "",
+    fecha_nacimiento: "", categoria_id: "",
     observaciones_medicas: "", otras_observaciones: "", is_active: true,
   });
   const [editForm, setEditForm] = useState({
     dni: "", codigo_unico: "", nombre: "", apellidos: "", email: "", telefono: "",
-    fecha_nacimiento: "", rango_edad_id: "",
+    fecha_nacimiento: "", categoria_id: "",
     observaciones_medicas: "", otras_observaciones: "", is_active: true,
   });
   const [loading, setLoading] = useState(false);
@@ -40,7 +40,7 @@ function MiembrosContent() {
 
   useEffect(() => {
     fetchMembers();
-    api.get("/age-ranges/").then(({ data }) => setAgeRanges(data)).catch(() => {});
+    api.get("/age-ranges/").then(({ data }) => setCategorias(data)).catch(() => {});
   }, [search]);
 
   const handleCreate = async (e: React.FormEvent) => {
@@ -55,7 +55,7 @@ function MiembrosContent() {
       payload.email = form.email || null;
       payload.telefono = form.telefono || null;
       if (form.fecha_nacimiento) payload.fecha_nacimiento = form.fecha_nacimiento;
-      payload.rango_edad_id = form.rango_edad_id || null;
+      payload.categoria_id = form.categoria_id || null;
       if (form.observaciones_medicas) payload.observaciones_medicas = form.observaciones_medicas;
       if (form.otras_observaciones) payload.otras_observaciones = form.otras_observaciones;
 
@@ -63,7 +63,7 @@ function MiembrosContent() {
       setShowCreateModal(false);
       setForm({
         dni: "", codigo_unico: "", nombre: "", apellidos: "", email: "", telefono: "",
-        fecha_nacimiento: "", rango_edad_id: "",
+        fecha_nacimiento: "", categoria_id: "",
         observaciones_medicas: "", otras_observaciones: "", is_active: true,
       });
       setQrDni(data.dni);
@@ -84,7 +84,7 @@ function MiembrosContent() {
       dni: m.dni, codigo_unico: m.codigo_unico || "", nombre: m.nombre,
       apellidos: m.apellidos || "", email: m.email || "", telefono: m.telefono || "",
       fecha_nacimiento: m.fecha_nacimiento ? m.fecha_nacimiento.split("T")[0] : "",
-      rango_edad_id: m.rango_edad_id || "",
+      categoria_id: m.categoria_id || "",
       observaciones_medicas: m.observaciones_medicas || "",
       otras_observaciones: m.otras_observaciones || "",
       is_active: m.is_active,
@@ -112,7 +112,7 @@ function MiembrosContent() {
       payload.telefono = editForm.telefono || null;
       if (editForm.fecha_nacimiento) payload.fecha_nacimiento = editForm.fecha_nacimiento;
       else payload.fecha_nacimiento = null;
-      payload.rango_edad_id = editForm.rango_edad_id || null;
+      payload.categoria_id = editForm.categoria_id || null;
       payload.observaciones_medicas = editForm.observaciones_medicas || null;
       payload.otras_observaciones = editForm.otras_observaciones || null;
       await api.put(`/members/${editMember.id}`, payload);
@@ -148,9 +148,9 @@ function MiembrosContent() {
     URL.revokeObjectURL(url);
   };
 
-  const getAgeRangeColor = (rangoId: string | null) => {
-    if (!rangoId) return null;
-    return ageRanges.find((r) => r.id === rangoId);
+  const getCategoriaColor = (catId: string | null) => {
+    if (!catId) return null;
+    return categorias.find((c) => c.id === catId);
   };
 
   return (
@@ -186,14 +186,14 @@ function MiembrosContent() {
               <th className="text-left px-4 py-3.5 text-xs font-semibold text-gray-500 uppercase tracking-wider">Apellidos</th>
               <th className="text-left px-4 py-3.5 text-xs font-semibold text-gray-500 uppercase tracking-wider">Email</th>
               <th className="text-left px-4 py-3.5 text-xs font-semibold text-gray-500 uppercase tracking-wider">Telefono</th>
-              <th className="text-left px-4 py-3.5 text-xs font-semibold text-gray-500 uppercase tracking-wider">Rango edad</th>
+              <th className="text-left px-4 py-3.5 text-xs font-semibold text-gray-500 uppercase tracking-wider">Categoria</th>
               <th className="text-left px-4 py-3.5 text-xs font-semibold text-gray-500 uppercase tracking-wider">QR</th>
               {isAdmin && <th className="text-left px-4 py-3.5 text-xs font-semibold text-gray-500 uppercase tracking-wider">Acciones</th>}
             </tr>
           </thead>
           <tbody className="divide-y divide-gray-50">
             {members.map((m) => {
-              const ar = getAgeRangeColor(m.rango_edad_id);
+              const cat = getCategoriaColor(m.categoria_id);
               return (
                 <tr key={m.id} className="hover:bg-blue-50/40 transition-colors">
                   <td className="px-4 py-3.5">
@@ -211,10 +211,10 @@ function MiembrosContent() {
                   <td className="px-4 py-3.5 text-gray-400">{m.email || "-"}</td>
                   <td className="px-4 py-3.5 text-gray-400">{m.telefono || "-"}</td>
                   <td className="px-4 py-3.5">
-                    {ar ? (
+                    {cat ? (
                       <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-medium text-white"
-                        style={{ backgroundColor: ar.color }}>
-                        {ar.nombre}
+                        style={{ backgroundColor: cat.color }}>
+                        {cat.nombre}
                       </span>
                     ) : "-"}
                   </td>
@@ -281,13 +281,13 @@ function MiembrosContent() {
             onChange={(e) => setForm({ ...form, fecha_nacimiento: e.target.value })}
             className="w-full px-4 py-2 border border-gray-300 rounded-lg" />
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">Rango de edad</label>
-            <select value={form.rango_edad_id} onChange={(e) => setForm({ ...form, rango_edad_id: e.target.value })}
+            <label className="block text-sm font-medium text-gray-700 mb-1">Categoria</label>
+            <select value={form.categoria_id} onChange={(e) => setForm({ ...form, categoria_id: e.target.value })}
               className="w-full px-4 py-2 border border-gray-300 rounded-lg">
-              <option value="">Sin rango</option>
-              {ageRanges.map((ar) => (
-                <option key={ar.id} value={ar.id}>
-                  {ar.nombre} ({ar.edad_min}-{ar.edad_max} años)
+              <option value="">Sin categoria</option>
+              {categorias.map((c) => (
+                <option key={c.id} value={c.id}>
+                  {c.nombre} ({c.edad_min}-{c.edad_max} años)
                 </option>
               ))}
             </select>
@@ -349,13 +349,13 @@ function MiembrosContent() {
             onChange={(e) => setEditForm({ ...editForm, fecha_nacimiento: e.target.value })}
             className="w-full px-4 py-2 border border-gray-300 rounded-lg" />
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">Rango de edad</label>
-            <select value={editForm.rango_edad_id} onChange={(e) => setEditForm({ ...editForm, rango_edad_id: e.target.value })}
+            <label className="block text-sm font-medium text-gray-700 mb-1">Categoria</label>
+            <select value={editForm.categoria_id} onChange={(e) => setEditForm({ ...editForm, categoria_id: e.target.value })}
               className="w-full px-4 py-2 border border-gray-300 rounded-lg">
-              <option value="">Sin rango</option>
-              {ageRanges.map((ar) => (
-                <option key={ar.id} value={ar.id}>
-                  {ar.nombre} ({ar.edad_min}-{ar.edad_max} años)
+              <option value="">Sin categoria</option>
+              {categorias.map((c) => (
+                <option key={c.id} value={c.id}>
+                  {c.nombre} ({c.edad_min}-{c.edad_max} años)
                 </option>
               ))}
             </select>
