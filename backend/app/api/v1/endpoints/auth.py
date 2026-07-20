@@ -1,3 +1,5 @@
+import json
+
 from fastapi import APIRouter, Depends, HTTPException, status
 from sqlalchemy.orm import Session
 
@@ -55,4 +57,11 @@ def refresh(body: RefreshRequest):
 
 @router.get("/me", response_model=UserMe)
 def me(current_user=Depends(get_current_user)):
-    return current_user
+    return {
+        "id": current_user.id,
+        "username": current_user.username,
+        "email": current_user.email,
+        "nombre": current_user.nombre,
+        "rol": current_user.rol,
+        "permisos": json.loads(current_user.permisos) if current_user.permisos else None,
+    }

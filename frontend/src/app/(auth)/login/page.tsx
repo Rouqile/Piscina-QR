@@ -6,6 +6,28 @@ import api from "@/services/api";
 import { useAuthStore } from "@/stores/authStore";
 import { toast } from "sonner";
 
+const FIRST_PAGE: Record<string, string> = {
+  dashboard: "/dashboard",
+  miembros: "/miembros",
+  academias: "/academias",
+  turnos: "/turnos",
+  asistencias: "/asistencias",
+  checkin: "/checkin",
+  reportes: "/reportes",
+  usuarios: "/usuarios",
+  config: "/config",
+};
+
+function getRedirect(user: { rol: string; permisos?: string[] | null }): string {
+  if (user.rol === "admin") return "/dashboard";
+  if (user.permisos && user.permisos.length > 0) {
+    for (const p of ["dashboard", "checkin", "asistencias", "reportes", "miembros", "turnos", "academias", "config", "usuarios"]) {
+      if (user.permisos.includes(p)) return FIRST_PAGE[p];
+    }
+  }
+  return "/checkin";
+}
+
 export default function LoginPage() {
   const [username, setUsername] = useState("");
   const [password, setPassword] = useState("");
@@ -19,7 +41,17 @@ export default function LoginPage() {
 
   useEffect(() => {
     if (hydrated && token) {
-      router.push("/dashboard");
+      const userStr = sessionStorage.getItem("user");
+      if (userStr) {
+        try {
+          const user = JSON.parse(userStr);
+          router.push(getRedirect(user));
+        } catch {
+          router.push("/checkin");
+        }
+      } else {
+        router.push("/dashboard");
+      }
     }
   }, [hydrated, token, router]);
 
@@ -36,7 +68,7 @@ export default function LoginPage() {
       });
       setAuth(tokens.access_token, user);
       toast.success(`Bienvenido, ${user.nombre}`);
-      router.push("/dashboard");
+      router.push(getRedirect(user));
     } catch {
       toast.error("Credenciales invalidas");
     } finally {
