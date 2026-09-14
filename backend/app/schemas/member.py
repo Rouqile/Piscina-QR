@@ -15,6 +15,8 @@ class MemberCreate(BaseModel):
     categoria_id: str | None = None
     observaciones_medicas: str | None = None
     otras_observaciones: str | None = None
+    tiene_condicion: bool = False
+    condicion: str | None = None
     is_active: bool = True
 
 
@@ -29,6 +31,8 @@ class MemberUpdate(BaseModel):
     categoria_id: str | None = None
     observaciones_medicas: str | None = None
     otras_observaciones: str | None = None
+    tiene_condicion: bool | None = None
+    condicion: str | None = None
     is_active: bool | None = None
 
 
@@ -46,6 +50,8 @@ class MemberResponse(BaseModel):
     categoria_id: uuid.UUID | None
     observaciones_medicas: str | None
     otras_observaciones: str | None
+    tiene_condicion: bool
+    condicion: str | None
     foto_url: str | None
     is_active: bool
     created_at: datetime

@@ -7,6 +7,7 @@ import { useAuthStore } from "@/stores/authStore";
 const allItems = [
   { href: "/dashboard", label: "Dashboard", key: "dashboard" },
   { href: "/miembros", label: "Miembros", key: "miembros" },
+  { href: "/condiciones", label: "Condiciones", key: "condiciones" },
   { href: "/academias", label: "Academias", key: "academias" },
   { href: "/turnos", label: "Turnos", key: "turnos" },
   { href: "/asistencias", label: "Asistencias", key: "asistencias" },

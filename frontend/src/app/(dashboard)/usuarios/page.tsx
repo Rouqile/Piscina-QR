@@ -20,6 +20,7 @@ interface SystemUser {
 const ALL_PERMISOS = [
   { key: "dashboard", label: "Dashboard" },
   { key: "miembros", label: "Miembros" },
+  { key: "condiciones", label: "Condiciones" },
   { key: "academias", label: "Academias" },
   { key: "turnos", label: "Turnos" },
   { key: "asistencias", label: "Asistencias" },

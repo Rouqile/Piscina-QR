@@ -9,6 +9,32 @@ import { EditIcon, DeleteIcon, DownloadIcon, PlusIcon } from "@/components/ui/Ic
 import { toast } from "sonner";
 import { useAuthStore } from "@/stores/authStore";
 
+function CondicionSection({ value, onChange }: {
+  value: { tiene_condicion: boolean; condicion: string };
+  onChange: (v: { tiene_condicion: boolean; condicion: string }) => void;
+}) {
+  return (
+    <div>
+      <label className="block text-sm font-medium text-gray-700 mb-2">¿Tiene condición?</label>
+      <div className="flex bg-gray-100 rounded-lg p-1 w-fit">
+        <button type="button" onClick={() => onChange({ ...value, tiene_condicion: true })}
+          className={`px-4 py-1.5 rounded-md text-sm font-medium transition-colors ${
+            value.tiene_condicion ? "bg-blue-600 text-white shadow-sm" : "text-gray-500 hover:text-gray-700"
+          }`}>Sí</button>
+        <button type="button" onClick={() => onChange({ ...value, tiene_condicion: false, condicion: "" })}
+          className={`px-4 py-1.5 rounded-md text-sm font-medium transition-colors ${
+            !value.tiene_condicion ? "bg-gray-400 text-white shadow-sm" : "text-gray-500 hover:text-gray-700"
+          }`}>No</button>
+      </div>
+      {value.tiene_condicion && (
+        <textarea placeholder="Describa la condición" value={value.condicion}
+          onChange={(e) => onChange({ ...value, condicion: e.target.value })}
+          className="w-full px-4 py-2 border border-gray-300 rounded-lg h-20 resize-none mt-2" required />
+      )}
+    </div>
+  );
+}
+
 function MiembrosContent() {
   const searchParams = useSearchParams();
   const [members, setMembers] = useState<Member[]>([]);
@@ -20,12 +46,14 @@ function MiembrosContent() {
   const [form, setForm] = useState({
     dni: "", codigo_unico: "", nombre: "", apellidos: "", email: "", telefono: "",
     fecha_nacimiento: "", categoria_id: "",
-    observaciones_medicas: "", otras_observaciones: "", is_active: true,
+    observaciones_medicas: "", otras_observaciones: "", tiene_condicion: false, condicion: "",
+    is_active: true,
   });
   const [editForm, setEditForm] = useState({
     dni: "", codigo_unico: "", nombre: "", apellidos: "", email: "", telefono: "",
     fecha_nacimiento: "", categoria_id: "",
-    observaciones_medicas: "", otras_observaciones: "", is_active: true,
+    observaciones_medicas: "", otras_observaciones: "", tiene_condicion: false, condicion: "",
+    is_active: true,
   });
   const [loading, setLoading] = useState(false);
   const [qrDni, setQrDni] = useState<string | null>(null);
@@ -58,13 +86,16 @@ function MiembrosContent() {
       payload.categoria_id = form.categoria_id || null;
       if (form.observaciones_medicas) payload.observaciones_medicas = form.observaciones_medicas;
       if (form.otras_observaciones) payload.otras_observaciones = form.otras_observaciones;
+      payload.tiene_condicion = form.tiene_condicion;
+      payload.condicion = form.tiene_condicion ? form.condicion || null : null;
 
       const { data } = await api.post("/members/", payload);
       setShowCreateModal(false);
       setForm({
         dni: "", codigo_unico: "", nombre: "", apellidos: "", email: "", telefono: "",
         fecha_nacimiento: "", categoria_id: "",
-        observaciones_medicas: "", otras_observaciones: "", is_active: true,
+        observaciones_medicas: "", otras_observaciones: "", tiene_condicion: false, condicion: "",
+        is_active: true,
       });
       setQrDni(data.dni);
       const qrResp = await api.get(`/members/${data.dni}/qr`, { responseType: "blob" });
@@ -87,6 +118,8 @@ function MiembrosContent() {
       categoria_id: m.categoria_id || "",
       observaciones_medicas: m.observaciones_medicas || "",
       otras_observaciones: m.otras_observaciones || "",
+      tiene_condicion: m.tiene_condicion,
+      condicion: m.condicion || "",
       is_active: m.is_active,
     });
     setShowEditModal(true);
@@ -115,6 +148,8 @@ function MiembrosContent() {
       payload.categoria_id = editForm.categoria_id || null;
       payload.observaciones_medicas = editForm.observaciones_medicas || null;
       payload.otras_observaciones = editForm.otras_observaciones || null;
+      payload.tiene_condicion = editForm.tiene_condicion;
+      payload.condicion = editForm.tiene_condicion ? editForm.condicion || null : null;
       await api.put(`/members/${editMember.id}`, payload);
       toast.success("Miembro actualizado");
       setShowEditModal(false);
@@ -298,6 +333,8 @@ function MiembrosContent() {
           <textarea placeholder="Otras observaciones (opcional)" value={form.otras_observaciones}
             onChange={(e) => setForm({ ...form, otras_observaciones: e.target.value })}
             className="w-full px-4 py-2 border border-gray-300 rounded-lg h-20 resize-none" />
+          <CondicionSection value={{ tiene_condicion: form.tiene_condicion, condicion: form.condicion }}
+            onChange={(v) => setForm({ ...form, ...v })} />
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-2">Estado</label>
             <div className="flex bg-gray-100 rounded-lg p-1 w-fit">
@@ -366,6 +403,8 @@ function MiembrosContent() {
           <textarea placeholder="Otras observaciones" value={editForm.otras_observaciones}
             onChange={(e) => setEditForm({ ...editForm, otras_observaciones: e.target.value })}
             className="w-full px-4 py-2 border border-gray-300 rounded-lg h-20 resize-none" />
+          <CondicionSection value={{ tiene_condicion: editForm.tiene_condicion, condicion: editForm.condicion }}
+            onChange={(v) => setEditForm({ ...editForm, ...v })} />
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-2">Estado</label>
             <div className="flex bg-gray-100 rounded-lg p-1 w-fit">

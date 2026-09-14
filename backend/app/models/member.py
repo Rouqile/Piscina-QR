@@ -26,6 +26,10 @@ class Member(Base):
     )
     observaciones_medicas: Mapped[str | None] = mapped_column(Text, nullable=True)
     otras_observaciones: Mapped[str | None] = mapped_column(Text, nullable=True)
+    tiene_condicion: Mapped[bool] = mapped_column(
+        Boolean, default=False, nullable=False, server_default="false"
+    )
+    condicion: Mapped[str | None] = mapped_column(Text, nullable=True)
     foto_url: Mapped[str | None] = mapped_column(String(500), nullable=True)
     is_active: Mapped[bool] = mapped_column(Boolean, default=True)
     created_at: Mapped[datetime] = mapped_column(

@@ -19,6 +19,8 @@ export interface Member {
   categoria_id: string | null;
   observaciones_medicas: string | null;
   otras_observaciones: string | null;
+  tiene_condicion: boolean;
+  condicion: string | null;
   foto_url: string | null;
   is_active: boolean;
   created_at: string;
